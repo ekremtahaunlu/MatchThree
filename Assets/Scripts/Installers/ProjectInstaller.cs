@@ -33,9 +33,9 @@ namespace Installers
 
     private void OnSceneLoaded(Scene loadedScene, LoadSceneMode arg1)
     {
-      if(loadedScene.name == "Login")
+      if(loadedScene.name == EnvVar.LoginSceneName)
       {
-        LoadScene("Main");
+        LoadScene(EnvVar.MainSceneName);
       }
     }
   }
