@@ -1,9 +1,6 @@
-﻿
+﻿public static class EnvVar
 {
-  public static class EnvVar
-  {
-    public const string LoginSceneName = "Login";
-    public const string MainSceneName = "Main";
-    public const string SettingsPath = "Settings/";
-  }
+  public const string LoginSceneName = "Login";
+  public const string MainSceneName = "Main";
+  public const string SettingsPath = "Settings/";
 }

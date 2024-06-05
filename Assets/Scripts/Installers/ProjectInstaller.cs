@@ -7,11 +7,14 @@ namespace Installers
   public class ProjectInstaller : MonoInstaller<ProjectInstaller>
   {
     private ProjectEvents _projectEvents;
+    private InputEvents _inputEvents;
 
     public override void InstallBindings()
     {
       _projectEvents = new ProjectEvents();
       Container.BindInstance(_projectEvents).AsSingle();
+      _inputEvents = new InputEvents();
+      Container.BindInstance(_inputEvents).AsSingle();
     }
 
     private void Awake()
