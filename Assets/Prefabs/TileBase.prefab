@@ -101,6 +101,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _coords: {x: 0, y: 0}
   _id: -1
+  _spriteRenderer: {fileID: -3540962350236055139}
+  _transform: {fileID: 3863543696047094509}
 --- !u!65 &-3345359201476441448
 BoxCollider:
   m_ObjectHideFlags: 0

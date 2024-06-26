@@ -26,8 +26,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1799873102815055911, guid: 13d651be536fbe44982399d331219b01, type: 3}
       propertyPath: _id
-      value: -1
+      value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 1799873102815055911, guid: 13d651be536fbe44982399d331219b01, type: 3}
+      propertyPath: _spriteRenderer
+      value: 
+      objectReference: {fileID: 651762516280931847}
     - target: {fileID: 3526327093496961053, guid: 13d651be536fbe44982399d331219b01, type: 3}
       propertyPath: m_Name
       value: TileStar
@@ -77,3 +81,8 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 13d651be536fbe44982399d331219b01, type: 3}
+--- !u!212 &651762516280931847 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 1181562986548584953, guid: 13d651be536fbe44982399d331219b01, type: 3}
+  m_PrefabInstance: {fileID: 1832481024855807998}
+  m_PrefabAsset: {fileID: 0}
