@@ -14,7 +14,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 3dfa7b93eefca7449b2987962b552ce6, type: 3}
     - target: {fileID: 1178423203717514584, guid: 669a6a420171b3b4cbc8ff5d91333c2c, type: 3}
       propertyPath: m_SortingOrder
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1178423203717514584, guid: 669a6a420171b3b4cbc8ff5d91333c2c, type: 3}
       propertyPath: m_WasSpriteAssigned
@@ -67,6 +67,10 @@ PrefabInstance:
     - target: {fileID: 4502520833038669753, guid: 669a6a420171b3b4cbc8ff5d91333c2c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5416839911497471886, guid: 669a6a420171b3b4cbc8ff5d91333c2c, type: 3}
+      propertyPath: _id
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

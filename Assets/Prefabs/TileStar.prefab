@@ -8,6 +8,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -360242011194748937, guid: 13d651be536fbe44982399d331219b01, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1181562986548584953, guid: 13d651be536fbe44982399d331219b01, type: 3}
       propertyPath: m_Size.y
       value: 0.9700599
@@ -18,7 +22,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: d127f4aada9b1dd458661c9592e771d1, type: 3}
     - target: {fileID: 1181562986548584953, guid: 13d651be536fbe44982399d331219b01, type: 3}
       propertyPath: m_SortingOrder
-      value: 3
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1181562986548584953, guid: 13d651be536fbe44982399d331219b01, type: 3}
       propertyPath: m_WasSpriteAssigned
@@ -75,6 +79,10 @@ PrefabInstance:
     - target: {fileID: 4486555239562064664, guid: 13d651be536fbe44982399d331219b01, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5409707007376913199, guid: 13d651be536fbe44982399d331219b01, type: 3}
+      propertyPath: _id
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
