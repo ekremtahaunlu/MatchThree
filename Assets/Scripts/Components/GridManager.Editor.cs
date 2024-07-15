@@ -84,7 +84,10 @@ namespace Components
             {
                 foreach(Tile o in _grid)
                 {
-                    DestroyImmediate(o.gameObject);
+                    if (o != null)
+                    {
+                        DestroyImmediate(o.gameObject);
+                    }
                 }
             }
 

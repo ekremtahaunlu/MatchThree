@@ -71,7 +71,7 @@ PrefabInstance:
     - target: {fileID: 4669741749570239194, guid: 61fdb42c699335947af781504dd40df4, type: 3}
       propertyPath: _spriteRenderer
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1181562986548584953}
     m_RemovedComponents:
     - {fileID: 6431369249303804048, guid: 61fdb42c699335947af781504dd40df4, type: 3}
     - {fileID: 2396063086222573881, guid: 61fdb42c699335947af781504dd40df4, type: 3}
