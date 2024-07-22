@@ -17,6 +17,11 @@ namespace Components
         public MonoPool MyPool{get;set;}
         public ITweenContainer TweenContainer{get;set;}
         public bool ToBeDestroyed{get;set;}
+        public bool IsPowerUp { get; set; }
+        
+        [SerializeField] private AudioClip moveSound;
+        [SerializeField] private AudioClip tileMovementSound;
+        private AudioSource audioSource;
 
         public enum TileType { Normal, PowerUp }
             public TileType type = TileType.Normal;
@@ -25,6 +30,11 @@ namespace Components
         private void Awake()
         {
             TweenContainer = TweenContain.Install(this);
+            audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
         }
 
         private void OnDisable()
@@ -67,7 +77,24 @@ namespace Components
 
         public Tween DoMove(Vector3 worldPos, TweenCallback onComplete = null)
         {
-            TweenContainer.AddTween = _transform.DOMove(worldPos, 1f);
+            /*if (moveSound != null)
+            {
+                audioSource.PlayOneShot(moveSound);
+            }
+            
+            //TweenContainer.AddTween = _transform.DOMove(worldPos, 1f);
+            TweenContainer.AddTween = _transform.DOMove(worldPos, 0.3f).SetEase(Ease.OutQuad);
+
+            TweenContainer.AddedTween.onComplete += onComplete;
+
+            return TweenContainer.AddedTween;*/
+            
+            if (!IsPowerUp && tileMovementSound != null && audioSource != null)
+            {
+                audioSource.PlayOneShot(tileMovementSound);
+            }
+
+            TweenContainer.AddTween = _transform.DOMove(worldPos, 0.3f).SetEase(Ease.OutQuad);
 
             TweenContainer.AddedTween.onComplete += onComplete;
 

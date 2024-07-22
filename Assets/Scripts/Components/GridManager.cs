@@ -68,10 +68,14 @@ namespace Components
         private bool _verticalPowerupPresent = false;
         private bool _bombPowerupPresent = false;
         
+        [SerializeField] private AudioClip horizontalPowerupSound;
+        [SerializeField] private AudioClip verticalPowerupSound;
+        [SerializeField] private AudioClip bombPowerupSound;
+        private AudioSource audioSource;
+        
         private void Awake()
         {
             _mySettings = ProjectSettings.GridManagerSettings;
-            
             _tilePoolsByPrefabID = new List<MonoPool>();
             _powerupPoolsByPrefabID = new Dictionary<int, MonoPool>();
             
@@ -103,11 +107,19 @@ namespace Components
                 _powerupPoolsByPrefabID.Add(powerupId, powerupPool);
             }
             TweenContainer = TweenContain.Install(this);
+            
+            audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
         }
 
 
         private void Start()
         {
+            ScoreManager.LoadHighScore();
+            
             for(int x = 0; x < _grid.GetLength(0); x ++)
             for(int y = 0; y < _grid.GetLength(1); y ++)
             {
@@ -120,14 +132,32 @@ namespace Components
             IsGameOver(out _hintTile, out _hintDir);
             GridEvents.GridLoaded?.Invoke(_gridBounds);
             GridEvents.InputStart?.Invoke();
+            
+            ScoreManager.ResetScore();
+        }
+        
+        private void OnMatchGroupDespawn(int matchCount)
+        {
+            int scoreToAdd = matchCount * _scoreMulti;
+            ScoreManager.AddScore(scoreToAdd);
+    
+            if (ScoreManager.CurrentScore == ScoreManager.HighScore)
+            {
+                LeaderboardManager.AddEntry("PlayerName", ScoreManager.HighScore);
+            }
         }
 
-        private void OnEnable() {RegisterEvents();}
+        private void OnEnable()
+        {
+            RegisterEvents();
+            GridEvents.MatchGroupDespawn += OnMatchGroupDespawn;
+        }
 
         private void OnDisable()
         {
             UnRegisterEvents();
             TweenContainer.Clear();
+            GridEvents.MatchGroupDespawn -= OnMatchGroupDespawn;
         }
 
         private bool CanMove(Vector2Int tileMoveCoord) => _grid.IsInsideGrid(tileMoveCoord);
@@ -276,6 +306,15 @@ namespace Components
                         hintDir = GridDir.Down;
                         return false;
                     }
+                    
+                    if (matches.Count == 0)
+                    {
+                        ScoreManager.SaveHighScore();
+                        LeaderboardManager.AddEntry("PlayerName", ScoreManager.HighScore);
+                        return true;
+                    }
+
+                    return false;
                 }
             }
 
@@ -439,6 +478,7 @@ namespace Components
             }
             
             SpawnAndAllocateTiles();
+            LeaderboardManager.AddEntry("PlayerName", ScoreManager.CurrentScore);
         }
         
         private void DespawnTile(Tile tile)
@@ -563,15 +603,22 @@ namespace Components
         
         private Tile SpawnRegularOrPowerupTile(Vector2Int spawnPoint, Vector2Int targetCoord)
         {
+            Tile newTile;
             if (ShouldSpawnPowerup(out int powerupId))
             {
-                return SpawnTile(_powerupPoolsByPrefabID[powerupId], _grid.CoordsToWorld(_transform, spawnPoint), targetCoord);
+                //return SpawnTile(_powerupPoolsByPrefabID[powerupId], _grid.CoordsToWorld(_transform, spawnPoint), targetCoord);
+                newTile = SpawnTile(_powerupPoolsByPrefabID[powerupId], _grid.CoordsToWorld(_transform, spawnPoint), targetCoord);
+                newTile.IsPowerUp = true;
             }
             else
             {
                 MonoPool randomPool = _tilePoolsByPrefabID.Random();
-                return SpawnTile(randomPool, _grid.CoordsToWorld(_transform, spawnPoint), targetCoord);
+                //return SpawnTile(randomPool, _grid.CoordsToWorld(_transform, spawnPoint), targetCoord);
+                newTile = SpawnTile(randomPool, _grid.CoordsToWorld(_transform, spawnPoint), targetCoord);
+                newTile.IsPowerUp = false;
             }
+
+            return newTile;
         }
 
         private bool ShouldSpawnPowerup(out int powerupId)
@@ -670,6 +717,7 @@ namespace Components
         private void ActivatePowerup(Tile powerupTile)
         {
             List<Tile> tilesToDestroy = new List<Tile>();
+            Vector3 powerupPosition = _grid.CoordsToWorld(_transform, powerupTile.Coords);
 
             if (powerupTile.ID == _powerupPrefabIDs[0])
             {
@@ -678,6 +726,7 @@ namespace Components
                     tilesToDestroy.Add(_grid[x, powerupTile.Coords.y]);
                 }
                 _horizontalPowerupPresent = false;
+                audioSource.PlayOneShot(horizontalPowerupSound);
             }
             else if (powerupTile.ID == _powerupPrefabIDs[1])
             {
@@ -685,8 +734,8 @@ namespace Components
                 {
                     tilesToDestroy.Add(_grid[powerupTile.Coords.x, y]);
                 }
-
                 _verticalPowerupPresent = false;
+                audioSource.PlayOneShot(verticalPowerupSound);
             }
             else if(powerupTile.ID == _powerupPrefabIDs[2])
             {
@@ -705,7 +754,9 @@ namespace Components
                     }
                 }
                 _bombPowerupPresent = false;
+                audioSource.PlayOneShot(bombPowerupSound);
             }
+            powerupTile.IsPowerUp = false;
 
             foreach (Tile tile in tilesToDestroy)
             {
@@ -724,7 +775,11 @@ namespace Components
             GridEvents.MatchGroupDespawn?.Invoke(score);
 
             SpawnAndAllocateTiles();
-            
+        }
+        
+        private void EndGame()
+        {
+            LeaderboardManager.AddEntry("Ekrem Taha", ScoreManager.CurrentScore);
         }
         
         private void UnRegisterEvents()

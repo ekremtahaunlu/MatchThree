@@ -103,6 +103,7 @@ MonoBehaviour:
   _id: 4
   _spriteRenderer: {fileID: 7335010419853506172}
   _transform: {fileID: 5627906121603401143}
+  moveSound: {fileID: 8300000, guid: 81a00477974db564fb05e369ab52cd82, type: 3}
   type: 1
   colorIndex: 0
 --- !u!54 &-6696076531101814803
