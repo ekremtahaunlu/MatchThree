@@ -19,7 +19,7 @@ PrefabInstance:
     - target: {fileID: 1181562986548584953, guid: 13d651be536fbe44982399d331219b01, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: d127f4aada9b1dd458661c9592e771d1, type: 3}
+      objectReference: {fileID: 21300000, guid: 42490f7b2e9053348950d09563d16826, type: 3}
     - target: {fileID: 1181562986548584953, guid: 13d651be536fbe44982399d331219b01, type: 3}
       propertyPath: m_SortingOrder
       value: 0
@@ -38,7 +38,7 @@ PrefabInstance:
       objectReference: {fileID: 651762516280931847}
     - target: {fileID: 3526327093496961053, guid: 13d651be536fbe44982399d331219b01, type: 3}
       propertyPath: m_Name
-      value: TileStar
+      value: TileParrot
       objectReference: {fileID: 0}
     - target: {fileID: 4486555239562064664, guid: 13d651be536fbe44982399d331219b01, type: 3}
       propertyPath: m_LocalPosition.x

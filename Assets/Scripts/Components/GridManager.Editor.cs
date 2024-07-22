@@ -16,13 +16,14 @@ namespace Components
     public partial class GridManager
     {
 #if UNITY_EDITOR
+       
         private Tile DrawTile(Rect rect, Tile tile)
         {
             if(tile == false) return tile;
             
             Texture2D preview = AssetPreview.GetAssetPreview(tile.gameObject);
             
-            rect = rect.Padding(3);
+            rect = rect.Padding(3); 
             EditorGUI.DrawPreviewTexture(rect, preview);
             
             return tile;

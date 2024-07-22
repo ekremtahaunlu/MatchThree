@@ -110,7 +110,7 @@ VFXRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 666422525
-  m_SortingLayer: 3
+  m_SortingLayer: 0
   m_SortingOrder: 1
 --- !u!1 &4166304325305356642
 GameObject:
@@ -230,5 +230,5 @@ VFXRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 666422525
-  m_SortingLayer: 3
+  m_SortingLayer: 0
   m_SortingOrder: 0

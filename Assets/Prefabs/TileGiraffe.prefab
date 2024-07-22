@@ -8,6 +8,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -6896129370098662218, guid: 61fdb42c699335947af781504dd40df4, type: 3}
+      propertyPath: m_Size.x
+      value: 3.155442
+      objectReference: {fileID: 0}
+    - target: {fileID: -6896129370098662218, guid: 61fdb42c699335947af781504dd40df4, type: 3}
+      propertyPath: m_Size.y
+      value: 3.3979297
+      objectReference: {fileID: 0}
+    - target: {fileID: -6896129370098662218, guid: 61fdb42c699335947af781504dd40df4, type: 3}
+      propertyPath: m_Center.x
+      value: 0.026943088
+      objectReference: {fileID: 0}
+    - target: {fileID: -6896129370098662218, guid: 61fdb42c699335947af781504dd40df4, type: 3}
+      propertyPath: m_Center.y
+      value: -0.022452593
+      objectReference: {fileID: 0}
     - target: {fileID: -3345359201476441448, guid: 61fdb42c699335947af781504dd40df4, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -20,6 +36,14 @@ PrefabInstance:
       propertyPath: _spriteRenderer
       value: 
       objectReference: {fileID: 1181562986548584953}
+    - target: {fileID: 3863543696047094509, guid: 61fdb42c699335947af781504dd40df4, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 3863543696047094509, guid: 61fdb42c699335947af781504dd40df4, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.25
+      objectReference: {fileID: 0}
     - target: {fileID: 3863543696047094509, guid: 61fdb42c699335947af781504dd40df4, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -62,7 +86,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4264175968260542952, guid: 61fdb42c699335947af781504dd40df4, type: 3}
       propertyPath: m_Name
-      value: TileFish
+      value: TileGiraffe
       objectReference: {fileID: 0}
     - target: {fileID: 4669741749570239194, guid: 61fdb42c699335947af781504dd40df4, type: 3}
       propertyPath: _id
@@ -130,7 +154,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 42dd346b733da1c46b67bb6ee1332cbe, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 3ad2f7c6dfaef2a4c8f8021a476554f9, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

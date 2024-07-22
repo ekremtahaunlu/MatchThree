@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,17 +12,18 @@ using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using UnityEngine;
 using Zenject;
+using Sequence = DG.Tweening.Sequence;
 
 namespace Components
 {
     public partial class GridManager : SerializedMonoBehaviour, ITweenContainerBind
     {
+        
         [Inject] private InputEvents InputEvents{get;set;}
         [Inject] private GridEvents GridEvents{get;set;}
-        [Inject] private ProjectSettings ProjectSettings{get;set;}
         [BoxGroup(Order = 999)]
 #if UNITY_EDITOR
-        [TableMatrix(SquareCells = true, DrawElementMethod = nameof(DrawTile))]  
+        [TableMatrix(SquareCells = true, DrawElementMethod = nameof(DrawTile))]
 #endif
         [OdinSerialize]
         private Tile[,] _grid;
@@ -43,7 +44,7 @@ namespace Components
         private MonoPool _tilePool2;
         private MonoPool _tilePool3;
         private Tile[,] _tilesToMove;
-        [OdinSerialize] private List<List<Tile>> _lastMatches;
+        [SerializeField] private List<List<Tile>> _lastMatches;
         private Tile _hintTile;
         private GridDir _hintDir;
         private Sequence _hintTween;
@@ -52,12 +53,27 @@ namespace Components
         [SerializeField] private int _scoreMulti;
         private Settings _mySettings;
         public ITweenContainer TweenContainer{get;set;}
+        [Inject] private ProjectSettings ProjectSettings { get; set; }
+        
+        private Dictionary<int, MonoPool> _powerupPoolsByPrefabID;
 
+        [SerializeField] private List<GameObject> _tilePowerupPrefabs;
+        [SerializeField] private List<int> _powerupPrefabIDs;
+
+        private const int horizontalPowerup = 2;
+        private const int verticalBombPowerup = 4;
+        private const int bombPowerup = 5;
+
+        private bool _horizontalPowerupPresent = false;
+        private bool _verticalPowerupPresent = false;
+        private bool _bombPowerupPresent = false;
+        
         private void Awake()
         {
             _mySettings = ProjectSettings.GridManagerSettings;
             
             _tilePoolsByPrefabID = new List<MonoPool>();
+            _powerupPoolsByPrefabID = new Dictionary<int, MonoPool>();
             
             for(int prefabId = 0; prefabId < _mySettings.PrefabIDs.Count; prefabId ++)
             {
@@ -74,8 +90,21 @@ namespace Components
                 _tilePoolsByPrefabID.Add(tilePool);
             }
             
+            for (int i = 0; i < _powerupPrefabIDs.Count; i++)
+            {
+                int powerupId = _mySettings.TilePrefabs.Count + i;
+                MonoPool powerupPool = new MonoPool(
+                    new MonoPoolData(
+                        _tilePowerupPrefabs[i],
+                        5,
+                        _transform
+                        )
+                );
+                _powerupPoolsByPrefabID.Add(powerupId, powerupPool);
+            }
             TweenContainer = TweenContain.Install(this);
         }
+
 
         private void Start()
         {
@@ -103,55 +132,58 @@ namespace Components
 
         private bool CanMove(Vector2Int tileMoveCoord) => _grid.IsInsideGrid(tileMoveCoord);
 
-        // private bool HasMatch(Tile fromTile, Tile toTile, out List<List<Tile>> matches)
-        // {
-        //     matches = new List<List<Tile>>();
-        //     bool hasMatches = false;
-        //
-        //     List<Tile> matchesAll = _grid.GetMatchesYAll(toTile);
-        //     matchesAll.AddRange(_grid.GetMatchesXAll(toTile));
-        //
-        //     if(matchesAll.Count > 0)
-        //     {
-        //         matches.Add(matchesAll);
-        //     }
-        //
-        //     matchesAll = _grid.GetMatchesYAll(fromTile);
-        //     matchesAll.AddRange(_grid.GetMatchesXAll(fromTile));
-        //
-        //     if(matchesAll.Count > 0)
-        //     {
-        //         matches.Add(matchesAll);
-        //     }
-        //     
-        //     if(matches.Count > 0) hasMatches = true;
-        //
-        //     return hasMatches;
-        // }
+        private bool HasMatch(Tile fromTile, Tile toTile, out List<List<Tile>> matches)
+        {
+            matches = new List<List<Tile>>(); 
+            bool hasMatches = false;
+
+            List<Tile> matchesAll = _grid.GetMatchesYAll(toTile);
+            matchesAll.AddRange(_grid.GetMatchesXAll(toTile));
+
+            if (matchesAll.Count > 0)
+            {
+                matches.Add(matchesAll);
+            }
+
+            matchesAll = _grid.GetMatchesYAll(fromTile);
+            matchesAll.AddRange(_grid.GetMatchesXAll(fromTile));
+
+            if (matchesAll.Count > 0)
+            {
+                matches.Add(matchesAll);
+            }
+            
+            if(matches.Count > 0) hasMatches = true;
+
+            return hasMatches;
+        }
 
         private bool HasAnyMatches(out List<List<Tile>> matches)
         {
             matches = new List<List<Tile>>();
             
             foreach(Tile tile in _grid)
-            {
+            { 
                 List<Tile> matchesAll = _grid.GetMatchesXAll(tile);
                 matchesAll.AddRange(_grid.GetMatchesYAll(tile));
-                
-                if(matchesAll.Count > 0)
+
+                if (matchesAll.Count > 0 )
                 {
                     matches.Add(matchesAll);
                 }
+                
             }
 
             matches = matches.OrderByDescending(e => e.Count).ToList();
 
-            for(int i = 0; i < matches.Count; i ++)
+            for (int i = 0; i < matches.Count; i++)
             {
                 List<Tile> match = matches[i];
                 
                 matches[i] = match.Where(e => e.ToBeDestroyed == false).DoToAll(e => e.ToBeDestroyed = true).ToList();
+
             }
+
             const int matchIndex = 2;
             
             matches = matches.Where(e => e.Count > matchIndex).ToList();
@@ -249,6 +281,7 @@ namespace Components
 
             return matches.Count == 0;
         }
+ 
 
         private void SpawnAndAllocateTiles()
         {
@@ -276,13 +309,15 @@ namespace Components
                                 spawnStartY = thisCoord.y;
                             }
                         
-                            MonoPool randomPool = _tilePoolsByPrefabID.Random();
-                            Tile newTile = SpawnTile
+                            //MonoPool randomPool = _tilePoolsByPrefabID.Random();
+
+                            Tile newTile = SpawnRegularOrPowerupTile(new Vector2Int(x, spawnPoint), thisCoord);
+                            /*Tile newTile = SpawnTile
                             (
                                 randomPool, 
                                 _grid.CoordsToWorld(_transform, new Vector2Int(x, spawnPoint)),
                                 thisCoord
-                            );
+                            );*/
                         
                             _tilesToMove[thisCoord.x, thisCoord.y] = newTile;
                             break;
@@ -320,7 +355,7 @@ namespace Components
         }
 
         private Tile SpawnTile(int id, Vector3 worldPos, Vector2Int coords) => SpawnTile(_tilePoolsByPrefabID[id], worldPos, coords);
-
+        
         private IEnumerator RainDownRoutine()
         {
             int longestDistY = 0;
@@ -335,7 +370,7 @@ namespace Components
                     Tile thisTile = _tilesToMove[x, y];
 
                     if(thisTile == false) continue;
-                    
+
                     Tween thisTween = thisTile.DoMove(_grid.CoordsToWorld(_transform, thisTile.Coords));
 
                     shouldWait = true;
@@ -360,6 +395,7 @@ namespace Components
                     if(HasAnyMatches(out _lastMatches))
                     {
                         StartDestroyRoutine();
+
                     }
                     else
                     {
@@ -377,37 +413,61 @@ namespace Components
 
         private void StartDestroyRoutine()
         {
-            if(_destroyRoutine != null)
+            if (_destroyRoutine != null)
             {
                 StopCoroutine(_destroyRoutine);
             }
             
             _destroyRoutine = StartCoroutine(DestroyRoutine());
-        }
 
+        }
+        
         private IEnumerator DestroyRoutine()
         {
-            foreach(List<Tile> matches in _lastMatches)
+            int groupCount = _lastMatches.Count;
+            
+            foreach (List<Tile> matches in _lastMatches)
             {
-                IncScoreMulti();
+                IntScoreMulti();
                 matches.DoToAll(DespawnTile);
                 
-                //TODO: Show score multi text in ui as PunchScale
+                // TODO: Show scoreMulti text in UI as PunchScale 
                 
                 GridEvents.MatchGroupDespawn?.Invoke(matches.Count * _scoreMulti);
-    
+                
                 yield return new WaitForSeconds(0.1f);
             }
             
             SpawnAndAllocateTiles();
         }
-
-        private void DespawnTile(Tile e)
+        
+        private void DespawnTile(Tile tile)
         {
-            _grid.Set(null, e.Coords);
-            _tilePoolsByPrefabID[e.ID].DeSpawn(e);
-        }
+            /*_grid.Set(null, e.Coords);
+            _tilePoolsByPrefabID[e.ID].DeSpawn(e); */
+            
+            _grid.Set(null, tile.Coords);
+            if (_powerupPrefabIDs.Contains(tile.ID))
+            {
+                if (tile.ID == _powerupPrefabIDs[0])
+                {
+                    _horizontalPowerupPresent = false;
+                }
+                else if (tile.ID == _powerupPrefabIDs[1])
+                {
+                    _verticalPowerupPresent = false;
+                }
+                else if (tile.ID == _powerupPrefabIDs[2])
+                {
+                    _bombPowerupPresent = false;
+                }
+                _powerupPoolsByPrefabID[tile.ID].DeSpawn(tile);
+                return; 
+            }
 
+            _tilePoolsByPrefabID[tile.ID].DeSpawn(tile);
+        }
+        
         private void DoTileMoveAnim(Tile fromTile, Tile toTile, TweenCallback onComplete = null)
         {
             Vector3 fromTileWorldPos = _grid.CoordsToWorld(_transform, fromTile.Coords);
@@ -418,54 +478,51 @@ namespace Components
 
         private void StartHintRoutine()
         {
-            if(_hintRoutine != null)
+            if (_hintRoutine != null)
             {
                 StopCoroutine(_hintRoutine);
             }
 
             _hintRoutine = StartCoroutine(HintRoutineUpdate());
         }
-
+        
         private void StopHintRoutine()
         {
-            if(_hintTile)
+            if (_hintTile)
             {
-                _hintTile.Teleport(_grid.CoordsToWorld(_transform, _hintTile.Coords));
+                _hintTile.Teleport(_grid.CoordsToWorld(_transform, _hintTile.Coords ));
             }
             
-            if(_hintRoutine != null)
+            if (_hintRoutine != null)
             {
                 StopCoroutine(_hintRoutine);
                 _hintRoutine = null;
             }
+
+            _hintRoutine = StartCoroutine(HintRoutineUpdate());
         }
 
         private IEnumerator HintRoutineUpdate()
         {
-            while(true)
+            while (true)
             {
-                yield return new WaitForSeconds(3f);
-                TryShowHint();
+                yield return new WaitForSeconds(3f); 
+                TryShowHint();            
             }
+            
         }
-
+        
         private void TryShowHint()
         {
             if(_hintTile)
             {
                 Vector2Int gridMoveDir = _hintDir.ToVector();
+                Vector3 gridMoveEase = gridMoveDir.ToVector3XY() * 0.66f;
 
-                Vector3 moveCoords = _grid.CoordsToWorld(_transform, _hintTile.Coords + gridMoveDir);
+                Vector3 moveCoords = _grid.CoordsToWorld(_transform, _hintTile.Coords + gridMoveDir) - gridMoveEase;
                 
-                _hintTween = _hintTile.DoHint(moveCoords);
+                Tween hintTween = _hintTile.DoHint(moveCoords);
             }
-        }
-
-        private void ResetScoreMulti() {_scoreMulti = 0;}
-
-        private void IncScoreMulti()
-        {
-            _scoreMulti ++;
         }
 
         private void RegisterEvents()
@@ -487,15 +544,63 @@ namespace Components
             ResetScoreMulti();
         }
 
+        private void ResetScoreMulti() {_scoreMulti = 0;}
+
+        private void IntScoreMulti()
+        {
+            _scoreMulti ++;
+        }
+
         private void OnMouseDownGrid(Tile clickedTile, Vector3 dirVector)
         {
             _selectedTile = clickedTile;
             _mouseDownPos = dirVector;
-
-            if(_hintTween.IsActive())
+            if (_hintTween.IsActive())
             {
                 _hintTween.Complete();
             }
+        }
+        
+        private Tile SpawnRegularOrPowerupTile(Vector2Int spawnPoint, Vector2Int targetCoord)
+        {
+            if (ShouldSpawnPowerup(out int powerupId))
+            {
+                return SpawnTile(_powerupPoolsByPrefabID[powerupId], _grid.CoordsToWorld(_transform, spawnPoint), targetCoord);
+            }
+            else
+            {
+                MonoPool randomPool = _tilePoolsByPrefabID.Random();
+                return SpawnTile(randomPool, _grid.CoordsToWorld(_transform, spawnPoint), targetCoord);
+            }
+        }
+
+        private bool ShouldSpawnPowerup(out int powerupId)
+        {
+            powerupId = -1;
+
+            if (_scoreMulti == horizontalPowerup + 1 && !_horizontalPowerupPresent)
+            {
+                powerupId = _powerupPrefabIDs[0];
+                _horizontalPowerupPresent = true;
+                return true;
+            }
+            
+            if (_scoreMulti == verticalBombPowerup + 1 && !_verticalPowerupPresent)
+            {
+                powerupId = _powerupPrefabIDs[1];
+                _verticalPowerupPresent = true;
+                return true;
+            }
+            
+            if (_scoreMulti == bombPowerup + 1 && !_bombPowerupPresent)
+            {
+                Debug.LogWarning($"SCORE MULTI = {_scoreMulti}");
+                powerupId = _powerupPrefabIDs[2];
+                _bombPowerupPresent = true;
+                return true;
+            }
+
+            return false;
         }
 
         private void OnMouseUpGrid(Vector3 mouseUpPos)
@@ -506,6 +611,19 @@ namespace Components
 
             if(_selectedTile)
             {
+                if (IsPowerupTile(_selectedTile))
+                {
+                    ActivatePowerup(_selectedTile);
+                    return;
+                }
+
+                if (!HasAnyMatches(out _lastMatches))
+                {
+                    ResetScoreMulti();  
+                }
+                
+                //
+                
                 Vector2Int tileMoveCoord = _selectedTile.Coords + GridF.GetGridDirVector(dirVector);
 
                 if(! CanMove(tileMoveCoord)) return;
@@ -543,7 +661,72 @@ namespace Components
                 }
             }
         }
+        
+        private bool IsPowerupTile(Tile tile)
+        {
+            return _powerupPrefabIDs.Contains(tile.ID);
+        }
 
+        private void ActivatePowerup(Tile powerupTile)
+        {
+            List<Tile> tilesToDestroy = new List<Tile>();
+
+            if (powerupTile.ID == _powerupPrefabIDs[0])
+            {
+                for (int x = 0; x < _gridSizeX; x++)
+                {
+                    tilesToDestroy.Add(_grid[x, powerupTile.Coords.y]);
+                }
+                _horizontalPowerupPresent = false;
+            }
+            else if (powerupTile.ID == _powerupPrefabIDs[1])
+            {
+                for (int y = 0; y < _gridSizeY; y++)
+                {
+                    tilesToDestroy.Add(_grid[powerupTile.Coords.x, y]);
+                }
+
+                _verticalPowerupPresent = false;
+            }
+            else if(powerupTile.ID == _powerupPrefabIDs[2])
+            {
+                Vector2Int[] adjacentDirection = new Vector2Int[]
+                {
+                    Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
+                    new Vector2Int(1, 1), new Vector2Int(1, -1), new Vector2Int(-1, 1), new Vector2Int(-1, -1)
+                };
+
+                foreach (Vector2Int dir in adjacentDirection)
+                {
+                    Vector2Int adjacentCoord = powerupTile.Coords + dir;
+                    if (_grid.IsInsideGrid(adjacentCoord))
+                    {
+                        tilesToDestroy.Add(_grid[adjacentCoord.x, adjacentCoord.y]);   
+                    }
+                }
+                _bombPowerupPresent = false;
+            }
+
+            foreach (Tile tile in tilesToDestroy)
+            {
+                DespawnTile(tile);
+            }
+            DespawnTile(powerupTile);
+            
+            GridEvents.MatchGroupDespawn?.Invoke(tilesToDestroy.Count * _scoreMulti);
+
+            if (powerupTile.ID == _powerupPrefabIDs[0]) _horizontalPowerupPresent = false;
+            else if (powerupTile.ID == _powerupPrefabIDs[1]) _verticalPowerupPresent = false;
+            else if (powerupTile.ID == _powerupPrefabIDs[2]) _bombPowerupPresent = false;
+
+            _scoreMulti = 1;
+            int score = tilesToDestroy.Count * _scoreMulti;
+            GridEvents.MatchGroupDespawn?.Invoke(score);
+
+            SpawnAndAllocateTiles();
+            
+        }
+        
         private void UnRegisterEvents()
         {
             InputEvents.MouseDownGrid -= OnMouseDownGrid;
@@ -551,32 +734,37 @@ namespace Components
             GridEvents.InputStart -= OnInputStart;
             GridEvents.InputStop -= OnInputStop;
         }
-
+        
         [Serializable]
         public class Settings
         {
             public List<GameObject> TilePrefabs => _tilePrefabs;
             public List<int> PrefabIDs => _prefabIds;
-            public GameObject TileBGPrefab => _tileBGPrefab;
-            [SerializeField] private GameObject _tileBGPrefab;
+            public GameObject TileBGPrefab => _tileBgPrefab;
+            public GameObject BorderTopLeft => _borderTopLeft; 
+            public GameObject BorderTopRight => _borderTopRight; 
+            public GameObject BorderBotLeft => _borderBotLeft; 
+            public GameObject BorderBotRight => _borderBotRight; 
+            public GameObject BorderLeft => _borderLeft; 
+            public GameObject BorderRight => _borderRight; 
+            public GameObject BorderTop => _borderTop; 
+            public GameObject BorderBot => _borderBot; 
+            
+            
+            [SerializeField] private GameObject _tileBgPrefab;
             [SerializeField] private List<int> _prefabIds;
             [SerializeField] private List<GameObject> _tilePrefabs;
-            [SerializeField] private GameObject _borderTopLeft;
-            [SerializeField] private GameObject _borderTopRight;
-            [SerializeField] private GameObject _borderBotLeft;
-            [SerializeField] private GameObject _borderBotRight;
-            [SerializeField] private GameObject _borderLeft;
-            [SerializeField] private GameObject _borderRight;
-            [SerializeField] private GameObject _borderTop;
+            
+            [SerializeField] private GameObject _borderTopLeft; 
+            [SerializeField] private GameObject _borderTopRight; 
+            [SerializeField] private GameObject _borderBotLeft; 
+            [SerializeField] private GameObject _borderBotRight; 
+            [SerializeField] private GameObject _borderLeft; 
+            [SerializeField] private GameObject _borderRight; 
+            [SerializeField] private GameObject _borderTop; 
             [SerializeField] private GameObject _borderBot;
-            public GameObject BorderTopLeft => _borderTopLeft;
-            public GameObject BorderTopRight => _borderTopRight;
-            public GameObject BorderBotLeft => _borderBotLeft;
-            public GameObject BorderBotRight => _borderBotRight;
-            public GameObject BorderLeft => _borderLeft;
-            public GameObject BorderRight => _borderRight;
-            public GameObject BorderTop => _borderTop;
-            public GameObject BorderBot => _borderBot;
+             
         }
+
     }
 }

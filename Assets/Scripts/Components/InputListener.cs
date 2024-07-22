@@ -9,10 +9,11 @@ namespace Components
   public class InputListener : EventListenerMono
   {
     [Inject] private InputEvents InputEvents{get;set;}
+    //[Inject] private AudioManager AudioManager { get; set; }
     [Inject] private Camera Camera{get;set;}
     [Inject] private GridEvents GridEvents{get;set;}
     private RoutineHelper _inputRoutine;
-
+    
     private void Awake() {_inputRoutine = new RoutineHelper(this, null, InputUpdate);}
 
     private void InputUpdate()
@@ -21,6 +22,8 @@ namespace Components
       {
         Ray inputRay = Camera.ScreenPointToRay(Input.mousePosition);
         RaycastHit[] hits = Physics.RaycastAll(inputRay, 100f);
+        
+        //AudioManager.Play("TileClick");
 
         Tile firstHitTile = null;
 

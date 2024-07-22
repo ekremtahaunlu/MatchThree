@@ -18,6 +18,10 @@ namespace Components
         public ITweenContainer TweenContainer{get;set;}
         public bool ToBeDestroyed{get;set;}
 
+        public enum TileType { Normal, PowerUp }
+            public TileType type = TileType.Normal;
+            public int colorIndex;
+
         private void Awake()
         {
             TweenContainer = TweenContain.Install(this);
