@@ -12,6 +12,8 @@ namespace Installers
     private InputEvents _inputEvents;
     private GridEvents _gridEvents;
     private ProjectSettings _projectSettings;
+    private AudioEvents _audioEvents;
+    private UIEvents _uiEvents;
 
     public override void InstallBindings()
     {
@@ -29,6 +31,12 @@ namespace Installers
 
       _gridEvents = new GridEvents();
       Container.BindInstance(_gridEvents).AsSingle();
+
+      _audioEvents = new AudioEvents();
+      Container.BindInstance(_audioEvents).AsSingle();
+
+      _uiEvents = new UIEvents();
+      Container.BindInstance(_uiEvents).AsSingle();
     }
 
     private void InstallSettings()

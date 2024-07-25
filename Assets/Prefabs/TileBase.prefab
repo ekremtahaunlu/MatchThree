@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 4669741749570239194}
   - component: {fileID: -6896129370098662218}
   - component: {fileID: 4611639575919376941}
+  - component: {fileID: -2166592238936608506}
+  - component: {fileID: -4285519582621325682}
   m_Layer: 0
   m_Name: TileBase
   m_TagString: Untagged
@@ -103,6 +105,8 @@ MonoBehaviour:
   _id: -1
   _spriteRenderer: {fileID: -3540962350236055139}
   _transform: {fileID: 3863543696047094509}
+  type: 0
+  colorIndex: 0
 --- !u!65 &-6896129370098662218
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -151,3 +155,33 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &-2166592238936608506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4264175968260542952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08eca9f7688a0a24685b89133b020c8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _scriptableObjectInstallers: []
+  _monoInstallers:
+  - {fileID: -4285519582621325682}
+  _installerPrefabs: []
+  _autoRun: 1
+  _kernel: {fileID: 0}
+--- !u!114 &-4285519582621325682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4264175968260542952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c35134eb6f8b4648a73adce169301e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

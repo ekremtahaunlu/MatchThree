@@ -1,7 +1,9 @@
+/*using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
-[System.Serializable]
+[Serializable]
 public class LeaderboardEntry
 {
   public string playerName;
@@ -12,47 +14,47 @@ public class LeaderboardManager : MonoBehaviour
 {
   private const string LeaderboardKey = "Leaderboard";
   private const int MaxEntries = 10;
-
-  public static List<LeaderboardEntry> Leaderboard { get; private set; } = new List<LeaderboardEntry>();
+  
+  public static LeaderboardManager Instance { get; private set; }
+  
+  private List<LeaderboardEntry> leaderboard;
 
   private void Awake()
   {
-    LoadLeaderboard();
+    if (Instance == null)
+    {
+      Instance = this;
+      DontDestroyOnLoad(gameObject);
+    }
+    else
+    {
+      Destroy(gameObject);
+    }
+    //LoadLeaderboard();
   }
 
-  public static void AddEntry(string playerName, int score)
+  public void AddEntry(string playerName, int score)
   {
-    Leaderboard.Add(new LeaderboardEntry { playerName = playerName, score = score });
-    Leaderboard.Sort((a, b) => b.score.CompareTo(a.score));
-
-    if (Leaderboard.Count > MaxEntries)
-    {
-      Leaderboard.RemoveAt(Leaderboard.Count - 1);
-    }
-
+    leaderboard.Add(new LeaderboardEntry { playerName = playerName, score = score });
+    leaderboard = leaderboard.OrderByDescending(e => e.score).Take(MaxEntries).ToList();
     SaveLeaderboard();
   }
 
-  private static void SaveLeaderboard()
+  public List<LeaderboardEntry> GetLeaderboard()
   {
-    string json = JsonUtility.ToJson(new SerializableList<LeaderboardEntry> { Items = Leaderboard });
-    PlayerPrefs.SetString(LeaderboardKey, json);
-    PlayerPrefs.Save();
+    return leaderboard;
   }
 
   private void LoadLeaderboard()
   {
-    if (PlayerPrefs.HasKey(LeaderboardKey))
-    {
-      string json = PlayerPrefs.GetString(LeaderboardKey);
-      SerializableList<LeaderboardEntry> loadedList = JsonUtility.FromJson<SerializableList<LeaderboardEntry>>(json);
-      Leaderboard = loadedList.Items;
-    }
+    string json = PlayerPrefs.GetString(LeaderboardKey, "[]");
+    leaderboard = JsonUtility.FromJson<List<LeaderboardEntry>>(json) ?? new List<LeaderboardEntry>();
   }
-}
 
-[System.Serializable]
-public class SerializableList<T>
-{
-  public List<T> Items;
-}
+  private void SaveLeaderboard()
+  {
+    string json = JsonUtility.ToJson(leaderboard);
+    PlayerPrefs.SetString(LeaderboardKey, json);
+    PlayerPrefs.Save();
+  }
+}*/

@@ -1,37 +1,51 @@
+using Events;
+using Extensions.Unity.MonoHelper;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+using Zenject;
 
-public class ScoreUI : MonoBehaviour
+public class ScoreUI : EventListenerMono
 {
-  public Text currentScoreText;
-  public Text highScoreText;
-
-  private ScoreManager scoreManager;
-
-  void Start()
+  public TextMeshProUGUI currentScoreText;
+  public TextMeshProUGUI highScoreText;
+  
+  [Inject] private UIEvents UIEvents { get; set; }
+  
+  private void Start()
   {
-    scoreManager = FindObjectOfType<ScoreManager>();
-
-    if (scoreManager == null)
+    if (currentScoreText == null || highScoreText == null) 
     {
-      Debug.LogError("ScoreManager bulunamadı!");
+      Debug.LogError("Text components are not assigned!");
       return;
     }
-    
-    //ScoreManager.OnScoreChanged += UpdateCurrentScore;
-    ScoreManager.OnHighScoreChanged += UpdateHighScore;
-    
-    UpdateCurrentScore(ScoreManager.CurrentScore);
-    UpdateHighScore(ScoreManager.HighScore);
   }
 
-  void UpdateCurrentScore(int score)
+  private void UpdateCurrentScore(int score)
   {
-    currentScoreText.text = "Score: " + score;
+    if (currentScoreText != null)
+    {
+      currentScoreText.text = "Score: " + score;
+    }
   }
 
-  void UpdateHighScore(int highScore)
+  private void UpdateHighScore(int highScore)
   {
-    highScoreText.text = "High Score: " + highScore;
+    if (highScoreText != null)
+    {
+      highScoreText.text = "High Score: " + highScore;
+    }
+  }
+
+  protected override void RegisterEvents()
+  {
+    UIEvents.ScoreChanged += UpdateCurrentScore;
+    UIEvents.HighScoreChanged += UpdateHighScore;
+    
+  }
+
+  protected override void UnRegisterEvents()
+  {
+    UIEvents.ScoreChanged -= UpdateCurrentScore;
+    UIEvents.HighScoreChanged -= UpdateHighScore;
   }
 }

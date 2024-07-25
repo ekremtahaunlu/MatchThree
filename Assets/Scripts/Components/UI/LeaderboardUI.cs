@@ -1,29 +1,66 @@
-using UnityEngine;
-using TMPro;
+/*using UnityEngine;
+using UnityEngine.UI;
 
 public class LeaderboardUI : MonoBehaviour
 {
-  [SerializeField] private Transform leaderboardEntryContainer;
-  [SerializeField] private GameObject leaderboardEntryPrefab;
+  public Text[] entryTexts;
+  [SerializeField] private Button closeButton;
+  private MainMenu mainMenu;
 
-  private void OnEnable()
+  private LeaderboardManager leaderboardManager;
+  public static LeaderboardUI Instance { get; private set; }
+  
+  private void Awake()
   {
-    UpdateLeaderboardUI();
-  }
-
-  private void UpdateLeaderboardUI()
-  {
-    foreach (Transform child in leaderboardEntryContainer)
+    mainMenu = FindObjectOfType<MainMenu>();
+    if (mainMenu == null)
     {
-      Destroy(child.gameObject);
+      Debug.LogError("MainMenu bulunamadı! Lütfen sahnede olduğundan emin olun.");
     }
 
-    foreach (LeaderboardEntry entry in LeaderboardManager.Leaderboard)
+    closeButton.onClick.AddListener(Hide);
+  }  
+  
+  private void Start()
+  {
+    leaderboardManager = FindObjectOfType<LeaderboardManager>();
+    closeButton.onClick.AddListener(Close);
+    gameObject.SetActive(false);
+  }
+
+  public void Show()
+  {
+    gameObject.SetActive(true);
+    UpdateLeaderboard();
+  }
+  
+  public void Hide()
+  {
+    gameObject.SetActive(false);
+    if (mainMenu != null)
     {
-      GameObject entryObject = Instantiate(leaderboardEntryPrefab, leaderboardEntryContainer);
-      TextMeshProUGUI[] texts = entryObject.GetComponentsInChildren<TextMeshProUGUI>();
-      texts[0].text = entry.playerName;
-      texts[1].text = entry.score.ToString();
+      mainMenu.OnLeaderboardClosed();
     }
   }
-}
+
+  private void Close()
+  {
+    gameObject.SetActive(false);
+  }
+
+  private void UpdateLeaderboard()
+  {
+    var entries = leaderboardManager.GetLeaderboard();
+    for (int i = 0; i < entryTexts.Length; i++)
+    {
+      if (i < entries.Count)
+      {
+        entryTexts[i].text = $"{i + 1}. {entries[i].playerName}: {entries[i].score}";
+      }
+      else
+      {
+        entryTexts[i].text = $"{i + 1}. ---";
+      }
+    }
+  }
+}*/

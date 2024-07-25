@@ -3,121 +3,99 @@ using System.Collections.Generic;
 using System.Linq;
 using Extensions.System;
 using UnityEngine;
+using UnityEngine.Events;
 using Object = UnityEngine.Object;
 
 namespace Extensions.Unity
 {
     public class MonoPool
     {
-        public int ActiveCount { get; private set; }
+        public int ActiveCount{get;private set;}
 
         private readonly MonoPoolData _monoPoolData;
 
         private readonly List<PoolObjData> _myPool = new();
+        public event Func<GameObject, GameObject> On_InstantiateRequest;
+        public event UnityAction<IPoolObj> On_Create;
+        public event UnityAction<IPoolObj> On_Spawn;
+        public event UnityAction<IPoolObj> On_DeSpawn;
+        
+        public readonly bool ManualInstantiate;
 
-        public MonoPool(MonoPoolData monoPoolData)
+        /// <summary>
+        /// Initializes pool params. Best to call at Awake.
+        /// </summary>
+        /// <param name="monoPoolData"></param>
+        /// <param name="manualInstantiate">If you want to use your class for instantiate algorithm. Mainly for dependency injection famework like Zenject</param>
+        public MonoPool(MonoPoolData monoPoolData, bool manualInstantiate = false)
         {
+            ManualInstantiate = manualInstantiate;
             _monoPoolData = monoPoolData;
 
-            if (_monoPoolData.Prefab.TryGetComponent(out IPoolObj _) == false)
+            if(_monoPoolData.Prefab.TryGetComponent(out IPoolObj _) == false)
             {
-                Debug.LogError("This is not a pool object. Make sure you inherit IPoolObj at prefab main parent");
-            }
-
-            for (int i = 0; i < _monoPoolData.InitSize; i++)
-            {
-                Create();
+                Debug.LogError
+                ("This is not a pool object. Make sure you inherit IPoolObj at prefab main parent");
             }
         }
 
-        public void SendMessageAll<T>(Action<T> func)
-        {
-            foreach (PoolObjData poolObjData in _myPool)
-            {
-                func((T)poolObjData.MyPoolObj);
-            }
-        }
         
-        public void SendMessage<T>(Action<T> func, int i)
+        /// <summary>
+        /// Creates pool with initial size. Best to call at start to be able to listen On_Create events;
+        /// </summary>
+        public void CreatePool()
         {
-            func((T)_myPool[i].MyPoolObj);
+            for(int i = 0; i < _monoPoolData.InitSize; i ++) { Create(); }
         }
 
-        public void DeSpawn(IPoolObj poolObj)
+        private PoolObjData Create(Transform parent = null, Vector3 worldPos = default, Quaternion worldRot = default)
         {
-            for (int i = 0; i < _myPool.Count; i++)
+            if (parent == null)
             {
-                PoolObjData thisPoolObjData = _myPool[i];
+                parent = _monoPoolData.ParentToInstUnder;
+            }
 
-                if (thisPoolObjData.MyPoolObj == poolObj)
-                {
-                    _myPool[i].DeSpawn();
-                    ActiveCount--;
-                    return;
-                }
+            if (worldPos == default)
+            {
+                worldPos = _monoPoolData.DefaultCreateWorldPos;
+            }
+
+            if (worldRot == default)
+            {
+                worldRot = _monoPoolData.DefaultCreateWorldRot;
+            }
+
+            GameObject newObj;
+
+            if(ManualInstantiate == false)
+            {
+                newObj = Object.Instantiate(_monoPoolData.Prefab, worldPos, worldRot, parent);
+            }
+            else
+            {
+                newObj = On_InstantiateRequest?.Invoke(_monoPoolData.Prefab);
             }
             
-            Debug.LogWarning($"{poolObj.transform.name} is not in this pool!");
+            
+            IPoolObj newPoolObj = newObj.GetComponent<IPoolObj>();
+
+            PoolObjData newPoolListObjData = new
+            (
+                newPoolObj
+            );
+
+            _myPool.Add(newPoolListObjData);
+            AfterCreate(newPoolListObjData);
+            newPoolListObjData.GameObject.SetActive(false);
+            newPoolListObjData.Transform.position = worldPos;
+            newPoolListObjData.Transform.rotation = worldRot;
+            newPoolListObjData.AssignPool(this);
+            newPoolListObjData.IsActive = false;
+
+            return newPoolListObjData;
         }
 
-        public void DeSpawn(int i)
-        {
-            _myPool[i].DeSpawn();
-            ActiveCount --;
-        }
-
-        public void DeSpawnAll()
-        {
-            foreach (PoolObjData poolObjData in _myPool) poolObjData.DeSpawn();
-
-            ActiveCount = 0;
-        }
-
-        public void DestroyPool()
-        {
-            _myPool.DoToAll(po => Object.Destroy(po.GameObject));
-            _myPool.Clear();
-        }
-
-        public void DeSpawnAfterTween(IPoolObj poolObj)
-        {
-            for (int i = 0; i < _myPool.Count; i++)
-            {
-                PoolObjData thisPoolObjData = _myPool[i];
-
-                if (thisPoolObjData.MyPoolObj == poolObj)
-                {
-                    thisPoolObjData.MyPoolObj.TweenDelayedDeSpawn(delegate
-                    {
-                        OnOprComplete(thisPoolObjData);
-                        return true;
-                    });
-
-                    _myPool[i] = thisPoolObjData;
-                    break;
-                }
-            }
-        }
-
-        public void DeSpawnLastAfterTween()
-        {
-            PoolObjData firstOrDefault = _myPool.FirstOrDefault(e => e.IsActive);
-
-            firstOrDefault?.MyPoolObj.TweenDelayedDeSpawn(delegate
-            {
-                firstOrDefault.DeSpawn();
-                ActiveCount --;
-                return true;
-            });
-        }
-
-        private void OnOprComplete(PoolObjData thisPoolObjData)
-        {
-            thisPoolObjData.IsActive = false;
-            ActiveCount--;
-            thisPoolObjData.BeforeDeSpawn();
-            thisPoolObjData.GameObject.SetActive(false);
-        }
+        public void Request(Transform parent = null, Vector3 worldPos = default, Quaternion worldRot = default) => Request<IPoolObj>(parent, worldPos, worldRot);
 
         public T Request<T>(Transform parent = null, Vector3 worldPos = default, Quaternion worldRot = default) where T : IPoolObj
         {
@@ -152,14 +130,14 @@ namespace Extensions.Unity
 
                 foundObjData.Transform.rotation = worldRot;
 
-                foundObjData.AfterRespawn();
+                AfterRespawn(foundObjData);
                 ActiveCount++;
                 return (T)foundObjData.MyPoolObj;
             }
 
             foundObjData = Create(parent, worldPos, worldRot);
             foundObjData.GameObject.SetActive(true);
-            foundObjData.AfterRespawn();
+            AfterRespawn(foundObjData);
             PoolObjData createdPoolObjData = _myPool.Last();
             createdPoolObjData.IsActive = true;
             _myPool[^1] = createdPoolObjData;
@@ -168,39 +146,100 @@ namespace Extensions.Unity
             return (T)foundObjData.MyPoolObj;
         }
 
-        public void Request(Transform parent = null, Vector3 worldPos = default, Quaternion worldRot = default) => Request<IPoolObj>(parent, worldPos, worldRot);
-
-        private PoolObjData Create(Transform parent = null, Vector3 worldPos = default, Quaternion worldRot = default)
+        private void AfterCreate(PoolObjData poolObjData)
         {
-            if (parent == null)
+            poolObjData.AfterCreate();
+            On_Create?.Invoke(poolObjData.MyPoolObj);
+        }
+        
+        private void DeSpawn(PoolObjData poolObjData)
+        {
+            BeforeDeSpawn(poolObjData);
+            poolObjData.DeSpawn();
+        }
+
+        private void AfterRespawn(PoolObjData poolObjData)
+        {
+            poolObjData.AfterRespawn();
+            On_Spawn?.Invoke(poolObjData.MyPoolObj);
+        }
+        
+        private void BeforeDeSpawn(PoolObjData poolObjData)
+        {
+            poolObjData.BeforeDeSpawn();
+            On_DeSpawn?.Invoke(poolObjData.MyPoolObj);
+        }
+
+        public void DeSpawn(IPoolObj poolObj)
+        {
+            for (int i = 0; i < _myPool.Count; i++)
             {
-                parent = _monoPoolData.ParentToInstUnder;
+                PoolObjData thisPoolObjData = _myPool[i];
+
+                if (thisPoolObjData.MyPoolObj == poolObj)
+                {
+                    DeSpawn(_myPool[i]);
+                    ActiveCount--;
+                    break;
+                }
+            }
+        }
+
+        public void DeSpawnAll()
+        {
+            foreach (PoolObjData poolObjData in _myPool)
+            {
+                DeSpawn(poolObjData);
             }
 
-            if (worldPos == default)
+            ActiveCount = 0;
+        }
+
+        public void DeSpawnAfterTween(IPoolObj poolObj)
+        {
+            for (int i = 0; i < _myPool.Count; i++)
             {
-                worldPos = _monoPoolData.DefaultCreateWorldPos;
-            }
+                PoolObjData thisPoolObjData = _myPool[i];
 
-            if (worldRot == default)
+                if (thisPoolObjData.MyPoolObj == poolObj)
+                {
+                    thisPoolObjData.MyPoolObj.TweenDelayedDeSpawn(delegate
+                    {
+                        OnOprComplete(thisPoolObjData, i);
+                        return true;
+                    });
+
+                    _myPool[i] = thisPoolObjData;
+                    break;
+                }
+            }
+        }
+
+        private void OnOprComplete(PoolObjData thisPoolObjData, int i)
+        {
+            thisPoolObjData.IsActive = false;
+            ActiveCount--;
+            BeforeDeSpawn(thisPoolObjData);
+            thisPoolObjData.GameObject.SetActive(false);
+        }
+
+        public void SendMessageAll<T>(Action<T> func)
+        {
+            foreach (PoolObjData poolObjData in _myPool)
             {
-                worldRot = _monoPoolData.DefaultCreateWorldRot;
+                func((T)poolObjData.MyPoolObj);
             }
+        }
 
-            GameObject newObj = Object.Instantiate(_monoPoolData.Prefab, worldPos, worldRot, parent);
-            IPoolObj newPoolObj = newObj.GetComponent<IPoolObj>();
+        public void SendMessage<T>(Action<T> func, int i)
+        {
+            func((T)_myPool[i].MyPoolObj);
+        }
 
-            PoolObjData newPoolListObjData = new(newPoolObj);
-
-            _myPool.Add(newPoolListObjData);
-            newPoolListObjData.AfterCreate();
-            newPoolListObjData.GameObject.SetActive(false);
-            newPoolListObjData.Transform.position = worldPos;
-            newPoolListObjData.Transform.rotation = worldRot;
-            newPoolListObjData.AssignPool(this);
-            newPoolListObjData.IsActive = false;
-
-            return newPoolListObjData;
+        public void DestroyPool()
+        {
+            _myPool.DoToAll(po => Object.Destroy(po.GameObject));
+            _myPool.Clear();
         }
     }
 
@@ -248,7 +287,6 @@ namespace Extensions.Unity
 
         public void DeSpawn()
         {
-            BeforeDeSpawn();
             GameObject.SetActive(false);
             IsActive = false;
         }
@@ -268,9 +306,15 @@ namespace Extensions.Unity
         Transform transform { get; }
         GameObject gameObject { get; }
         MonoPool MyPool { get; set; }
+        /// <summary>
+        /// Only called on Instantiate
+        /// </summary>
         void AfterCreate();
         void BeforeDeSpawn();
-        void TweenDelayedDeSpawn(Func<bool> onComplete);
+        void TweenDelayedDeSpawn(Func<bool> invokeOnTweenComplete);
+        /// <summary>
+        /// Only called after SetActive(true)
+        /// </summary>
         void AfterSpawn();
     }
 }
