@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -7,6 +9,7 @@ public class PauseMenu : MonoBehaviour
     private static bool _gameIsPaused = false;
 
     public GameObject pauseMenuUI;
+    public string mainMenuSceneName = "MainMenu";
 
     private void Update()
     {
@@ -37,11 +40,30 @@ public class PauseMenu : MonoBehaviour
         _gameIsPaused = true;
     }
     
-    public void LoadMenu()
+    public void OptionsMenu()
     {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene("MainMenu");
+        Time.timeScale = 0f;
+        SceneManager.LoadScene(mainMenuSceneName);
+        StartCoroutine(OpenOptionsAfterSceneLoad());
     }
+    
+    private IEnumerator OpenOptionsAfterSceneLoad()
+    {
+        yield return null;
+
+        MainMenu mainMenu = FindObjectOfType<MainMenu>();
+        if (mainMenu != null)
+        {
+            mainMenu.OpenOptions();
+        }
+        else
+        {
+            Debug.LogError("MainMenu not found!");
+        }
+
+        Time.timeScale = 1f;
+    }
+
 
     public void QuitGame()
     {

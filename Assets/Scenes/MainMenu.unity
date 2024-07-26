@@ -721,6 +721,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2586283f518e9fb47bb00916a36de038, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  OptionsBTN: {fileID: 0}
 --- !u!1 &545653405
 GameObject:
   m_ObjectHideFlags: 0
@@ -4024,7 +4025,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2050420678}
   m_Layer: 5
-  m_Name: OptionsMenu
+  m_Name: OptionsPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -24,10 +24,10 @@ public class ScoreManager : EventListenerMono
         _currentScore = value;
         UIEvents.ScoreChanged?.Invoke(_currentScore);
       }
-    }
+    } 
   }
 
-  private int HighScore 
+  private int HighScore
   { 
     get => _highScore;
     set
