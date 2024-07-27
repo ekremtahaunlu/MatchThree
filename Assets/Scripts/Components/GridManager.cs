@@ -71,22 +71,13 @@ namespace Components
 		private bool _horizontalPowerupPresent = false;
 		private bool _verticalPowerupPresent = false;
 		private bool _bombPowerupPresent = false;
-
-		//private LeaderboardManager leaderboardManager;
-
-
+		
 		private void Awake()
 		{
 			_scoreManager = FindObjectOfType<ScoreManager>();
-			//leaderboardManager = FindObjectOfType<LeaderboardManager>();
 			_mySettings = ProjectSettings.GridManagerSettings;
 			_tilePoolsByPrefabID = new List<MonoPool>();
 			_powerupPoolsByPrefabID = new Dictionary<int, MonoPool>();
-
-			/*if (leaderboardManager == null)
-			{
-			    Debug.LogError("LeaderboardManager bulunamadı! Lütfen sahnede olduğundan emin olun.");
-			}*/
 
 			for (var prefabId = 0; prefabId < _mySettings.PrefabIDs.Count; prefabId++)
 			{
@@ -122,12 +113,6 @@ namespace Components
 
 		private void Start()
 		{
-			/*leaderboardManager = FindObjectOfType<LeaderboardManager>();
-			if (leaderboardManager == null)
-			{
-			    Debug.LogError("LeaderboardManager bulunamadı!");
-			}*/
-
 			for (var x = 0; x < _grid.GetLength(0); x++)
 			for (var y = 0; y < _grid.GetLength(1); y++)
 			{
@@ -350,12 +335,6 @@ namespace Components
 							//MonoPool randomPool = _tilePoolsByPrefabID.Random();
 
 							var newTile = SpawnRegularOrPowerupTile(new Vector2Int(x, spawnPoint), thisCoord);
-							/*Tile newTile = SpawnTile
-							(
-							    randomPool,
-							    _grid.CoordsToWorld(_transform, new Vector2Int(x, spawnPoint)),
-							    thisCoord
-							);*/
 
 							_tilesToMove[thisCoord.x, thisCoord.y] = newTile;
 							break;
