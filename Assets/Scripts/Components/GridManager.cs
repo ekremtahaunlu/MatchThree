@@ -604,9 +604,9 @@ namespace Components
 			var tilesToDestroy = new List<Tile>();
 			var powerupPosition = _grid.CoordsToWorld(_transform, powerupTile.Coords);
 
-			var powerupBaseScore = 50; // Powerup için temel puan
+			var powerupBaseScore = 50;
 			var score = tilesToDestroy.Count * powerupBaseScore;
-			score = Mathf.Min(score, 2000); // Maksimum 2000 puan sınırı
+			score = Mathf.Min(score, 2000);
 			GridEvents.PowerUpDestroyScore?.Invoke(score);
 
 			if (powerupTile.ID == _powerupPrefabIDs[0])
