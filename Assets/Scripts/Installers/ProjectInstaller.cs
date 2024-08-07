@@ -52,7 +52,11 @@ namespace Installers
 
     public override void Start()
     {
-      _projectEvents.ProjectStarted?.Invoke();
+	    _projectEvents.ProjectStarted?.Invoke();
+      if (SceneManager.GetActiveScene().name == EnvVar.LoginSceneName)
+      {
+        
+      }
     }
 
     private static void LoadScene(string sceneName) {SceneManager.LoadScene(sceneName);}

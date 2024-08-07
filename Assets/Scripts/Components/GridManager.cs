@@ -451,7 +451,6 @@ namespace Components
 			}
 
 			SpawnAndAllocateTiles();
-			//leaderboardManager.AddEntry("PlayerName", _scoreManager.CurrentScore);
 		}
 
 		private void DespawnTile(Tile tile)
@@ -531,7 +530,6 @@ namespace Components
 
 		private void IncreaseScoreMulti()
 		{
-			//_scoreMulti ++;
 			SetScoreMulti(Mathf.Min(_scoreMulti + 1, 5));
 		}
 
@@ -548,7 +546,6 @@ namespace Components
 			Tile newTile;
 			if (ShouldSpawnPowerup(out var powerupId))
 			{
-				//return SpawnTile(_powerupPoolsByPrefabID[powerupId], _grid.CoordsToWorld(_transform, spawnPoint), targetCoord);
 				newTile = SpawnTile(_powerupPoolsByPrefabID[powerupId], _grid.CoordsToWorld(_transform, spawnPoint),
 					targetCoord);
 				newTile.IsPowerUp = true;
@@ -556,7 +553,6 @@ namespace Components
 			else
 			{
 				var randomPool = _tilePoolsByPrefabID.Random();
-				//return SpawnTile(randomPool, _grid.CoordsToWorld(_transform, spawnPoint), targetCoord);
 				newTile = SpawnTile(randomPool, _grid.CoordsToWorld(_transform, spawnPoint), targetCoord);
 				newTile.IsPowerUp = false;
 			}
