@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor.Animations;
@@ -37,10 +37,11 @@ namespace Extensions.Unity
                 animationClip.AddEvent(endEvent);
                 overrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(null, animationClip));
             }
-
+            
             animatorOverrideController.ApplyOverrides(overrides);
             animator.runtimeAnimatorController = animatorOverrideController;
         }
+
 #if UNITY_EDITOR
         public static void AddAnimClip(this AnimatorController toAnimatorController, AnimationClip newStateMotion, string newStateName, string exitTrig,
             string anyTrig,
@@ -67,6 +68,7 @@ namespace Extensions.Unity
             exitTransition.AddCondition(AnimatorConditionMode.If, 0, exitTrig);
             exitTransition.duration = exitDur;
         }
-    #endif
+#endif
+
     }
 }
